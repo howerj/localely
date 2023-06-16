@@ -1,0 +1,8 @@
+c
+cpp
+*.o
+*.a
+*.exe
+*.3
+*.htm
+*.html
