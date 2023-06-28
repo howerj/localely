@@ -61,6 +61,9 @@
  * file which includes this header to make a program that runs the 
  * unit tests and exits.
  *
+ * You many need to set LOCALELY_EXTERN as well when setting LOCALELY_API
+ * to avoid a function being declared "static" and "extern".
+ *
  * The header only depends on <assert.h> unless unit tests are needed. The
  * unit tests do what I complain about earlier, being some random library
  * that uses "setlocale", you should not need to call them in your program
@@ -78,47 +81,59 @@ extern "C" {
 #define LOCALELY_API
 #endif
 
-#ifndef LOCALELY_IMPLEMENTATION
+#ifndef LOCALELY_EXTERN
+#define LOCALELY_EXTERN extern
+#endif
 
-extern int C_isascii(const int ch);
-extern int C_isspace(const int ch);
-extern int C_iscntrl(const int ch);
-extern int C_isprint(const int ch);
-extern int C_isblank(const int ch);
-extern int C_isgraph(const int ch);
-extern int C_isupper(const int ch);
-extern int C_islower(const int ch);
-extern int C_isalpha(const int ch);
-extern int C_isdigit(const int ch);
-extern int C_isalnum(const int ch);
-extern int C_ispunct(const int ch);
-extern int C_isxdigit(const int ch);
+#define LOCALELY_VERSION (0x010002ul)
 
+LOCALELY_EXTERN int C_isascii(const int ch);
+LOCALELY_EXTERN int C_isspace(const int ch);
+LOCALELY_EXTERN int C_iscntrl(const int ch);
+LOCALELY_EXTERN int C_isprint(const int ch);
+LOCALELY_EXTERN int C_isblank(const int ch);
+LOCALELY_EXTERN int C_isgraph(const int ch);
+LOCALELY_EXTERN int C_isupper(const int ch);
+LOCALELY_EXTERN int C_islower(const int ch);
+LOCALELY_EXTERN int C_isalpha(const int ch);
+LOCALELY_EXTERN int C_isdigit(const int ch);
+LOCALELY_EXTERN int C_isalnum(const int ch);
+LOCALELY_EXTERN int C_ispunct(const int ch);
+LOCALELY_EXTERN int C_isxdigit(const int ch);
+
+#ifdef LOCALELY_IMPLEMENTATION
+
+#ifdef LOCALELY_STRICT_INPUT
+static inline int C_char_range(const int ch) { assert(ch >= -1 && ch <= 255); return ch; }
 #else
+static inline int C_char_range(const int ch) { return ch & 0xFF; /* EOF converted to 0xFF, which does not matter for conversion functions */ }
+#endif
 
-static inline void C_assert_char_range(const int ch) { assert(ch >= -1 && ch <= 255); }
-static inline int C_assert_return(const int r) { assert(r == 0 || r == 1); return r; }
-LOCALELY_API int C_isascii(const int ch) { C_assert_char_range(ch); return C_assert_return(ch < 128 && ch >= 0); }
-LOCALELY_API int C_isspace(const int ch) { C_assert_char_range(ch); return C_assert_return((ch >= 9 && ch <= 13) || ch == 32); }
-LOCALELY_API int C_iscntrl(const int ch) { C_assert_char_range(ch); return C_assert_return((ch < 32 || ch == 127) && C_isascii(ch)); }
-LOCALELY_API int C_isprint(const int ch) { C_assert_char_range(ch); return C_assert_return(!C_iscntrl(ch) && C_isascii(ch)); }
-LOCALELY_API int C_isblank(const int ch) { C_assert_char_range(ch); return C_assert_return(ch == 32 || ch == 9); }
-LOCALELY_API int C_isgraph(const int ch) { C_assert_char_range(ch); return C_assert_return(ch > 32 && ch < 127); }
-LOCALELY_API int C_isupper(const int ch) { C_assert_char_range(ch); return C_assert_return(ch >= 65 && ch <= 90); }
-LOCALELY_API int C_islower(const int ch) { C_assert_char_range(ch); return C_assert_return(ch >= 97 && ch <= 122); }
-LOCALELY_API int C_isalpha(const int ch) { C_assert_char_range(ch); return C_assert_return(C_islower(ch) || C_isupper(ch)); }
-LOCALELY_API int C_isdigit(const int ch) { C_assert_char_range(ch); return C_assert_return(ch >= 48 && ch <= 57); }
-LOCALELY_API int C_isalnum(const int ch) { C_assert_char_range(ch); return C_assert_return(C_isalpha(ch) || C_isdigit(ch)); }
-LOCALELY_API int C_ispunct(const int ch) { C_assert_char_range(ch); return C_assert_return((ch >= 33 && ch <= 47) || (ch >= 58 && ch <= 64) || (ch >= 91 && ch <= 96) || (ch >= 123 && ch <= 126)); }
-LOCALELY_API int C_isxdigit(const int ch) { C_assert_char_range(ch); return C_assert_return((ch >= 65 && ch <= 70) || (ch >= 97 && ch <= 102) || C_isdigit(ch)); }
+static inline int C_char_return(const int r) { assert(r == 0 || r == 1); return r; }
+LOCALELY_API int C_isascii(int ch) { ch = C_char_range(ch); return C_char_return(ch < 128 && ch >= 0); }
+LOCALELY_API int C_isspace(int ch) { ch = C_char_range(ch); return C_char_return((ch >= 9 && ch <= 13) || ch == 32); }
+LOCALELY_API int C_iscntrl(int ch) { ch = C_char_range(ch); return C_char_return((ch < 32 || ch == 127) && C_isascii(ch)); }
+LOCALELY_API int C_isprint(int ch) { ch = C_char_range(ch); return C_char_return(!C_iscntrl(ch) && C_isascii(ch)); }
+LOCALELY_API int C_isblank(int ch) { ch = C_char_range(ch); return C_char_return(ch == 32 || ch == 9); }
+LOCALELY_API int C_isgraph(int ch) { ch = C_char_range(ch); return C_char_return(ch > 32 && ch < 127); }
+LOCALELY_API int C_isupper(int ch) { ch = C_char_range(ch); return C_char_return(ch >= 65 && ch <= 90); }
+LOCALELY_API int C_islower(int ch) { ch = C_char_range(ch); return C_char_return(ch >= 97 && ch <= 122); }
+LOCALELY_API int C_isalpha(int ch) { ch = C_char_range(ch); return C_char_return(C_islower(ch) || C_isupper(ch)); }
+LOCALELY_API int C_isdigit(int ch) { ch = C_char_range(ch); return C_char_return(ch >= 48 && ch <= 57); }
+LOCALELY_API int C_isalnum(int ch) { ch = C_char_range(ch); return C_char_return(C_isalpha(ch) || C_isdigit(ch)); }
+LOCALELY_API int C_ispunct(int ch) { ch = C_char_range(ch); return C_char_return((ch >= 33 && ch <= 47) || (ch >= 58 && ch <= 64) || (ch >= 91 && ch <= 96) || (ch >= 123 && ch <= 126)); }
+LOCALELY_API int C_isxdigit(int ch) { ch = C_char_range(ch); return C_char_return((ch >= 65 && ch <= 70) || (ch >= 97 && ch <= 102) || C_isdigit(ch)); }
 
 #endif
 
 #ifdef LOCALELY_UNIT_TESTS
-#include <locale.h>
-#include <ctype.h>
+#include <locale.h> /* needed to set the locale */
+#include <ctype.h> /* compare our functions against the standard libs */
 
-#define BOOLINATOR(X) (!!(X))
+/* Can turn anything into a bool, things such as NULL, 0, 1, even 2,
+ * or "Does this arbitrary program halt?" (which returns true, because
+ * that's a string. */
+#define BOOLINATOR(X) (!!(X)) 
 
 #ifndef LOCALELY_IMPLEMENTATION
 
@@ -127,7 +142,7 @@ extern int localely_unit_tests(void); /* returns zero on success, negative on fa
 #else
 
 LOCALELY_API int localely_unit_tests(void) {
-	if (!setlocale(LC_ALL, "C"))
+	if (!setlocale(LC_ALL, "C")) /* force locale, needed, but super not ideal */
 		return -1;
 	for (int ch = -1; ch < 256; ch++) {
 		if (C_isspace(ch) != BOOLINATOR(isspace(ch))) return -2;
