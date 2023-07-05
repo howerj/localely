@@ -85,21 +85,25 @@ extern "C" {
 #define LOCALELY_EXTERN extern
 #endif
 
-#define LOCALELY_VERSION (0x010002ul)
+#define LOCALELY_VERSION (0x010200ul)
 
-LOCALELY_EXTERN int C_isascii(const int ch);
-LOCALELY_EXTERN int C_isspace(const int ch);
-LOCALELY_EXTERN int C_iscntrl(const int ch);
-LOCALELY_EXTERN int C_isprint(const int ch);
-LOCALELY_EXTERN int C_isblank(const int ch);
-LOCALELY_EXTERN int C_isgraph(const int ch);
-LOCALELY_EXTERN int C_isupper(const int ch);
-LOCALELY_EXTERN int C_islower(const int ch);
-LOCALELY_EXTERN int C_isalpha(const int ch);
-LOCALELY_EXTERN int C_isdigit(const int ch);
-LOCALELY_EXTERN int C_isalnum(const int ch);
-LOCALELY_EXTERN int C_ispunct(const int ch);
-LOCALELY_EXTERN int C_isxdigit(const int ch);
+LOCALELY_EXTERN int C_isascii(int ch);
+LOCALELY_EXTERN int C_isspace(int ch);
+LOCALELY_EXTERN int C_iscntrl(int ch);
+LOCALELY_EXTERN int C_isprint(int ch);
+LOCALELY_EXTERN int C_isblank(int ch);
+LOCALELY_EXTERN int C_isgraph(int ch);
+LOCALELY_EXTERN int C_isupper(int ch);
+LOCALELY_EXTERN int C_islower(int ch);
+LOCALELY_EXTERN int C_isalpha(int ch);
+LOCALELY_EXTERN int C_isdigit(int ch);
+LOCALELY_EXTERN int C_isalnum(int ch);
+LOCALELY_EXTERN int C_ispunct(int ch);
+LOCALELY_EXTERN int C_isxdigit(int ch);
+
+LOCALELY_EXTERN int C_toupper(int ch);
+LOCALELY_EXTERN int C_tolower(int ch);
+
 
 #ifdef LOCALELY_IMPLEMENTATION
 
@@ -123,6 +127,9 @@ LOCALELY_API int C_isdigit(int ch) { ch = C_char_range(ch); return C_char_return
 LOCALELY_API int C_isalnum(int ch) { ch = C_char_range(ch); return C_char_return(C_isalpha(ch) || C_isdigit(ch)); }
 LOCALELY_API int C_ispunct(int ch) { ch = C_char_range(ch); return C_char_return((ch >= 33 && ch <= 47) || (ch >= 58 && ch <= 64) || (ch >= 91 && ch <= 96) || (ch >= 123 && ch <= 126)); }
 LOCALELY_API int C_isxdigit(int ch) { ch = C_char_range(ch); return C_char_return((ch >= 65 && ch <= 70) || (ch >= 97 && ch <= 102) || C_isdigit(ch)); }
+
+LOCALELY_API int C_toupper(int ch) { return C_islower(ch) ? ch ^ 0x20 : ch; }
+LOCALELY_API int C_tolower(int ch) { return C_isupper(ch) ? ch ^ 0x20 : ch; }
 
 #endif
 
@@ -157,6 +164,21 @@ LOCALELY_API int localely_unit_tests(void) {
 		if (C_isalnum(ch) != BOOLINATOR(isalnum(ch))) return -11;
 		if (C_ispunct(ch) != BOOLINATOR(ispunct(ch))) return -12;
 		if (C_isxdigit(ch) != BOOLINATOR(isxdigit(ch))) return -13;
+	}
+	for (int ch = 0; ch < 256; ch++) {
+		if (C_isupper(ch)) {
+			if (C_toupper(ch) != ch) return -14;
+			if (C_tolower(ch) == ch) return -15;
+			if (!C_islower(C_tolower(ch))) return -16;
+		} else if (C_islower(ch)) {
+			if (C_tolower(ch) != ch) return -18;
+			if (C_toupper(ch) == ch) return -17;
+			if (!C_isupper(C_toupper(ch))) return -19;
+		} else {
+			if (C_tolower(ch) != ch) return -20;
+			if (C_toupper(ch) != ch) return -21;
+
+		}
 	}
 	return 0;
 }
